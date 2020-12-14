@@ -2,8 +2,10 @@ package com.reactnativecommunity.webview;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -15,6 +17,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Message;
 import android.os.SystemClock;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -27,6 +30,7 @@ import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
+import android.webkit.JsPromptResult;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.SslErrorHandler;
 import android.webkit.PermissionRequest;
@@ -38,6 +42,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import androidx.annotation.Nullable;
@@ -803,6 +808,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
       }
     }
 
+
     @Override
     public void onPageStarted(WebView webView, String url, Bitmap favicon) {
       super.onPageStarted(webView, url, favicon);
@@ -1194,6 +1200,31 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
     @Override
     public void onHostDestroy() { }
+
+    @Override
+    public boolean onJsPrompt(WebView webView, String url, String message,
+            String defaultValue, JsPromptResult result) {
+      Context context = webView.getContext();
+      final EditText input = new EditText(context);
+      input.setInputType(InputType.TYPE_CLASS_TEXT);
+      input.setText(defaultValue);
+      new AlertDialog.Builder(context)
+        .setView(input)
+        .setMessage(message)
+        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+           public void onClick(DialogInterface dialog, int which) {
+             result.confirm(input.getText().toString());
+           }
+         })
+        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+           public void onClick(DialogInterface dialog, int which) {
+             result.cancel();
+           }
+         })
+       .create()
+       .show();
+      return true;
+    }
 
     protected ViewGroup getRootView() {
       return (ViewGroup) mReactContext.getCurrentActivity().findViewById(android.R.id.content);
